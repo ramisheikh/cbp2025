@@ -270,7 +270,7 @@ class lentry            //loop predictor entry
 //For the TAGE predictor
 bentry *btable;         //bimodal TAGE table
 gentry *gtable[NHIST + 1];  // tagged TAGE tables
-lentry *ltable;
+//lentry *ltable;
 int m[NHIST + 1];
 int TB[NHIST + 1];
 int logg[NHIST + 1];
@@ -327,6 +327,17 @@ struct cbp_hist_t
 
       std::array<uint64_t, 256> IMHIST;
       uint64_t IMLIcount;      // use to monitor the iteration number
+#ifdef LOOPPREDICTOR
+      std::vector<lentry> ltable;
+      int8_t WITHLOOP;
+#endif
+      cbp_hist_t()
+      {
+#ifdef LOOPPREDICTOR
+          ltable.resize(1 << (LOGL));
+          WITHLOOP = -1;
+#endif
+      }
 };
 
 
@@ -474,7 +485,8 @@ class CBP2016_TAGE_SC_L
         bool LowConf;
         bool HighConf;
 
-        int8_t WITHLOOP;    // counter to monitor whether or not loop prediction is beneficial
+        // checkpointed in history
+        //int8_t WITHLOOP;    // counter to monitor whether or not loop prediction is beneficial
 
         cbp_hist_t active_hist; // running history always updated accurately
         // checkpointed history. Can be accesed using the inst-id(seq_no/piece)
@@ -543,9 +555,9 @@ class CBP2016_TAGE_SC_L
             }
 
 
-#ifdef LOOPPREDICTOR
-            ltable = new lentry[1 << (LOGL)];
-#endif
+//#ifdef LOOPPREDICTOR
+//            ltable = new lentry[1 << (LOGL)];
+//#endif
 
             gtable[1] = new gentry[NBANKLOW * (1 << LOGG)];
             SizeTable[1] = NBANKLOW * (1 << LOGG);
@@ -569,7 +581,7 @@ class CBP2016_TAGE_SC_L
 
 // LOOPPREDICTOR state
             LVALID = false;
-            WITHLOOP = -1;
+            //WITHLOOP = -1;
             Seed = 0;
 
             TICK = 0;
@@ -1023,7 +1035,7 @@ class CBP2016_TAGE_SC_L
 
 #ifdef LOOPPREDICTOR
             predloop = getloop (PC, hist_to_use);   // loop prediction
-            pred_taken = ((WITHLOOP >= 0) && (LVALID)) ? predloop : pred_taken;
+            pred_taken = ((hist_to_use.WITHLOOP >= 0) && (LVALID)) ? predloop : pred_taken;
 #endif
             pred_inter = pred_taken;
 
@@ -1106,18 +1118,18 @@ class CBP2016_TAGE_SC_L
         }
 
 
-        void history_update (uint64_t seq_no, uint8_t piece, UINT64 PC, int brtype, bool taken, UINT64 nextPC)
+        void history_update (uint64_t seq_no, uint8_t piece, UINT64 PC, int brtype, bool pred_taken, bool taken, UINT64 nextPC)
         {
             //HistoryUpdate (PC, brtype, taken, nextPC, active_hist.phist, active_hist.ptghist, active_hist.ch_i, active_hist.ch_t[0], active_hist.ch_t[1]);
-            HistoryUpdate (PC, brtype, taken, nextPC);
+            HistoryUpdate (PC, brtype, pred_taken, taken, nextPC);
         }
 
-        void TrackOtherInst (UINT64 PC, int brtype, bool taken, UINT64 nextPC)
+        void TrackOtherInst (UINT64 PC, int brtype, bool pred_taken, bool taken, UINT64 nextPC)
         {
-            HistoryUpdate (PC, brtype, taken, nextPC);
+            HistoryUpdate (PC, brtype, pred_taken, taken, nextPC);
         }
 
-        void HistoryUpdate (UINT64 PC, int brtype, bool taken, UINT64 nextPC)
+        void HistoryUpdate (UINT64 PC, int brtype, bool pred_taken, bool taken, UINT64 nextPC)
         {
 
             auto& X = active_hist.phist;
@@ -1139,6 +1151,17 @@ class CBP2016_TAGE_SC_L
             {
 #ifdef IMLI
                 active_hist.IMHIST[active_hist.IMLIcount] = (active_hist.IMHIST[active_hist.IMLIcount] << 1) + taken;
+#endif
+
+#ifdef LOOPPREDICTOR
+                // only for conditional branch
+                if (LVALID)
+                {
+                    if (pred_taken != predloop)
+                        ctrupdate (active_hist.WITHLOOP, (predloop == pred_taken), 7);
+                }
+
+                loopupdate(PC, pred_taken, false/*alloc*/, active_hist.ltable);
 #endif
                 if (nextPC < PC)
 
@@ -1226,12 +1249,18 @@ class CBP2016_TAGE_SC_L
         {
 #ifdef SC
 #ifdef LOOPPREDICTOR
-            if (LVALID)
+            if(pred_taken != resolveDir)  // incorrect loophhist updates in spec_update
             {
-                if (pred_taken != predloop)
-                    ctrupdate (WITHLOOP, (predloop == resolveDir), 7);
+                // fix active hist.ltable and active_hist.WITHLOOP
+                active_hist.ltable = hist_to_use.ltable;
+                active_hist.WITHLOOP = hist_to_use.WITHLOOP;
+                if (LVALID)
+                {
+                    if (pred_taken != predloop)
+                        ctrupdate (active_hist.WITHLOOP, (predloop == resolveDir), 7);
+                }
+                loopupdate (PC, resolveDir, (pred_taken != resolveDir), active_hist.ltable);
             }
-            loopupdate (PC, resolveDir, (pred_taken != resolveDir), hist_to_use);
 #endif
 
             bool SCPRED = (LSUM >= 0);
@@ -1597,6 +1626,7 @@ class CBP2016_TAGE_SC_L
 #define CONFLOOP 15
         bool getloop (UINT64 PC, const cbp_hist_t& hist_to_use)
         {
+            const auto& ltable = hist_to_use.ltable;
             LHIT = -1;
 
             LI = lindex (PC);
@@ -1629,7 +1659,7 @@ class CBP2016_TAGE_SC_L
 
 
 
-        void loopupdate (UINT64 PC, bool Taken, bool ALLOC, const cbp_hist_t& hist_to_use)
+        void loopupdate (UINT64 PC, bool Taken, bool ALLOC, std::vector<lentry>& ltable)
         {
             if (LHIT >= 0)
             {
