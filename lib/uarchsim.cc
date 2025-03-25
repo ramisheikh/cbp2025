@@ -321,7 +321,7 @@ void uarchsim_t::eval_aq(std::ostream& activity_trace, bool& activity_observed, 
            const auto& window_entry = locate_entry_in_window(seq_no, piece);
            assert(is_mem(window_entry.exec_info.dec_info.insn_class));
            assert(current_cycle > window_entry.decode_cycle);
-           assert(current_cycle < window_entry.exec_cycle);
+           assert(current_cycle <= window_entry.exec_cycle);
            notify_agen_complete(window_entry.seq_no, window_entry.piece, window_entry.PC, window_entry.exec_info.dec_info, window_entry.exec_info.mem_va.value(), window_entry.exec_info.mem_sz.value(), current_cycle);
            activity_trace<<current_cycle<<"::AGEN:"<<window_entry<<"\n";
            activity_observed = true;

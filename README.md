@@ -16,7 +16,7 @@ The simulator interacts with the branch predictor via the following interfaces:
 * get_cond_dir_prediction - invoke the predictor to get the prediction of the relevant branch. This is called only for conditional branches.
 * spec_update - Intended to help update the predictor's history (GHR/LHIST ..etc.) This is called for all branches right after a prediction is made.
 * notify_instr_decode - Called when an instruction is decoded.
-* notify_agen_complete - Called when agen of a load/store instruction completes
+* notify_agen_complete - Called when agen of a load/store instruction completes.
 * notify_instr_execute_resolve - Called when any instruction is executed.
 * notify_instr_commit - Called when any instruction is committed.
 * endCondDirPredictor - Called at the end of simulation to allow contestants to dump any additional state.
