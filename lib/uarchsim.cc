@@ -307,6 +307,35 @@ void uarchsim_t::eval_decode(std::ostream& activity_trace, bool& activity_observ
 }
 
 ////////////////////////
+// Manage AGEN
+////////////////////////
+void uarchsim_t::eval_aq(std::ostream& activity_trace, bool& activity_observed, const uint64_t current_cycle) 
+{
+   auto aq_it = AQ.begin();
+   while(aq_it != AQ.end())
+   {
+       const auto [seq_no, piece, agen_cycle] = *aq_it;
+       assert(current_cycle <= agen_cycle);
+       if(current_cycle == agen_cycle)
+       {
+           const auto& window_entry = locate_entry_in_window(seq_no, piece);
+           assert(is_mem(window_entry.exec_info.dec_info.insn_class));
+           assert(current_cycle > window_entry.decode_cycle);
+           assert(current_cycle < window_entry.exec_cycle);
+           notify_agen_complete(window_entry.seq_no, window_entry.piece, window_entry.PC, window_entry.exec_info.dec_info, window_entry.exec_info.mem_va.value(), window_entry.exec_info.mem_sz.value(), current_cycle);
+           activity_trace<<current_cycle<<"::AGEN:"<<window_entry<<"\n";
+           activity_observed = true;
+           aq_it = AQ.erase(aq_it);
+       }
+       else
+       {
+           ++aq_it;
+       }
+   }
+}
+
+
+////////////////////////
 // Manage Execute
 ////////////////////////
 void uarchsim_t::eval_exec(std::ostream& activity_trace, bool& activity_observed, const uint64_t current_cycle) 
@@ -371,6 +400,7 @@ void uarchsim_t::step(db_t *inst)
        while(temp_fetch_cycle <= fetch_cycle)
        {
            eval_decode(activity_trace, activity_observed, temp_fetch_cycle);
+           eval_aq(activity_trace, activity_observed, temp_fetch_cycle);
            eval_exec(activity_trace, activity_observed, temp_fetch_cycle);
            eval_retire(activity_trace, activity_observed, temp_fetch_cycle);
            temp_fetch_cycle++;
@@ -400,6 +430,7 @@ void uarchsim_t::step(db_t *inst)
           while(temp_fetch_cycle <= next_fetch_cycle)
           {
               eval_decode(activity_trace, activity_observed, temp_fetch_cycle);
+              eval_aq(activity_trace, activity_observed, temp_fetch_cycle);
               eval_exec(activity_trace, activity_observed, temp_fetch_cycle);
               eval_retire(activity_trace, activity_observed, temp_fetch_cycle);
               temp_fetch_cycle++;
@@ -470,6 +501,8 @@ void uarchsim_t::step(db_t *inst)
    {
       if (alu_lanes) exec_cycle = alu_lanes->schedule(exec_cycle);
    }
+
+   const uint64_t agen_cycle = is_mem(inst->insn_class) ? (exec_cycle + 1) : UINT64_MAX;
 
    if (inst->is_load) {
      
@@ -650,6 +683,11 @@ void uarchsim_t::step(db_t *inst)
    notify_instr_fetch(seq_no, piece, inst->pc, fetch_cycle);
 
    DQ.push_back(std::make_tuple(seq_no, piece, decode_cycle));
+   if(is_mem(inst->insn_class))
+   {
+       AQ.push_back(std::make_tuple(seq_no, piece, agen_cycle));
+       assert(AQ.size() <= window_capacity);
+   }
    EQ.push_back(std::make_tuple(seq_no, piece, exec_cycle));
 
    /////////////////////////////

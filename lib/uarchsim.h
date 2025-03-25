@@ -97,6 +97,7 @@ struct window_t {
        os<<" fetch_cycle:"<<entry.fetch_cycle;
        os<<" decode_cycle:"<<entry.decode_cycle;
        os<<" exec_cycle:"<<entry.exec_cycle;
+       os<<" ExecInfo:"<<entry.exec_info;
        os<<" retire_cycle:"<<entry.retire_cycle;
        os<<"}";
        return os;
@@ -130,6 +131,7 @@ class uarchsim_t {
       unordered_map<uint64_t, store_queue_t> SQ;
 
       std::deque<std::tuple<uint64_t/*seq_no*/, uint8_t/*piece*/, uint64_t/*decode_cycle*/>> DQ;
+      std::list<std::tuple<uint64_t/*seq_no*/, uint8_t/*piece*/, uint64_t/*agen_cycle*/>> AQ; // agen_queue
       std::list<std::tuple<uint64_t/*seq_no*/, uint8_t/*piece*/, uint64_t/*exec_cycle*/>> EQ;
 
       // memory block timestamps
@@ -188,6 +190,7 @@ class uarchsim_t {
       //void set_funcsim(processor_t *funcsim);
       void step(db_t *inst);
       void eval_decode(std::ostream& activity_trace, bool& activity_observed, const uint64_t current_fetch_cycle) ;
+      void eval_aq(std::ostream& activity_trace, bool& activity_observed, const uint64_t current_fetch_cycle) ;
       void eval_exec(std::ostream& activity_trace, bool& activity_observed, const uint64_t current_fetch_cycle) ;
       void eval_retire(std::ostream& activity_trace, bool& activity_observed, const uint64_t current_fetch_cycle) ;
       void output();

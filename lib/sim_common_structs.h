@@ -25,6 +25,7 @@
 #include <optional>
 #include <vector>
 #include <cstdint>
+#include <ostream>
 
 enum class InstClass : uint8_t
 {
@@ -111,6 +112,15 @@ struct DecodeInfo
         src_reg_info.clear();
         dst_reg_info.reset();
     }
+
+    friend std::ostream& operator<<(std::ostream& os, const DecodeInfo& dec_info)
+    {
+        os<<"{ Class:"<<cInfo[static_cast<uint8_t>(dec_info.insn_class)];
+        os<<" num_src_reg:"<<dec_info.src_reg_info.size();
+        os<<" arch_dst_reg:"<<dec_info.dst_reg_info.value_or(0xFFFFFFFFFFFFFFFF);
+        os<<" }";
+        return os;
+    }
 };
 
 struct ExecuteInfo
@@ -135,5 +145,15 @@ struct ExecuteInfo
         mem_va.reset();
         mem_sz.reset();
         dst_reg_value.reset();
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const ExecuteInfo& exec_info)
+    {
+        os<<"{ DecodeInfo:"<<exec_info.dec_info;
+        os<<" mem_va:0x"<<std::hex<<exec_info.mem_va.value_or(0xFFFFFFFFFFFFFFFF)<<std::dec;
+        os<<" mem_sz:0x"<<std::hex<<exec_info.mem_sz.value_or(0xFFFFFFFFFFFFFFFF)<<std::dec;
+        os<<" dst_reg_value:0x"<<std::hex<<exec_info.dst_reg_value.value_or(0xFFFFFFFFFFFFFFFF)<<std::dec;
+        os<<" }";
+        return os;
     }
 };
