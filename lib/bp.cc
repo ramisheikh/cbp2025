@@ -206,7 +206,7 @@ void bp_t::update_cycles_on_wrong_path(const uint64_t cycles_on_wrong_path)
 #define BP_OUTPUT(str, n, m, i) \
     printf("%s%10ld %10ld %8.4lf%% %8.4lf\n", (str), (n), (m), 100.0*((double)(m)/(double)(n)), 1000.0*((double)(m)/(double)(i)))
 
-void bp_t::output()
+void bp_t::output(const uint64_t num_inst)
 {
    const uint64_t meas_conddir_n = std::accumulate(meas_conddir_n_per_epoch.begin(), meas_conddir_n_per_epoch.end(), 0);    // # conditional branches
    const uint64_t meas_conddir_m = std::accumulate(meas_conddir_m_per_epoch.begin(), meas_conddir_m_per_epoch.end(), 0);    // # mispredicted conditional branches
@@ -224,7 +224,6 @@ void bp_t::output()
 
    //const uint64_t meas_cycles_on_wrong_path = std::accumulate(meas_cycles_on_wrong_path_per_epoch.begin(), meas_cycles_on_wrong_path_per_epoch.end(), 0);
 
-   uint64_t num_inst = (meas_conddir_n + meas_jumpdir_n + meas_jumpind_n + meas_jumpret_n + meas_notctrl_n);
    //uint64_t num_misp = (meas_conddir_m + meas_jumpind_m + meas_jumpret_m + meas_notctrl_m);
    printf("\n-----------------------------------------------BRANCH PREDICTION MEASUREMENTS (Full Simulation i.e. Counts Not Reset When Warmup Ends)----------------------------------------------\n");
    printf("Type                   NumBr     MispBr        mr     mpki\n");
