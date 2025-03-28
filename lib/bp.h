@@ -107,7 +107,7 @@ public:
     bool predict(uint64_t seq_no, uint8_t piece, InstClass insn, uint64_t pc, uint64_t next_pc, const uint64_t pred_cycle);
 
     // Output all branch prediction measurements.
-    void output();
+    void output(const uint64_t num_inst);
     void output_periodic_info(const std::vector<uint64_t>&num_insts_per_epoch, const std::vector<uint64_t>&num_cycles_per_epoch);
     void notify_begin_new_epoch();
     void update_cycles_on_wrong_path(const uint64_t cycles_on_wrong_path);

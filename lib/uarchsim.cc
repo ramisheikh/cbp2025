@@ -910,6 +910,6 @@ void uarchsim_t::output()
    printf("IPC          = %.4f\n", ((double)num_inst/(double)cycle));
    printf("\n---------------------------------------------------------------------------------------------------------------------------------------\n");
    // Branch Prediction Measurements
-   BP.output();
+   BP.output(num_inst);
    BP.output_periodic_info(num_insts_per_epoch, num_cycles_per_epoch);
 }
