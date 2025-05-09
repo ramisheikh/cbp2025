@@ -369,7 +369,7 @@ int predictorsize ()
 #endif
 
     inter += WIDTHRES;
-    inter = WIDTHRESP * ((1 << LOGSIZEUP)); //the update threshold counters
+    inter += WIDTHRESP * ((1 << LOGSIZEUP)); //the update threshold counters
     inter += 3 * EWIDTH * (1 << LOGSIZEUPS);    // the extra weight of the partial sums
     inter += (PERCWIDTH) * 3 * (1 << (LOGBIAS));
 
