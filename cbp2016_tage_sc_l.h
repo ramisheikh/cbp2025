@@ -58,7 +58,7 @@ int8_t IGEHLA[INB][(1 << LOGINB)] = { {0} };
 
 int8_t *IGEHL[INB];
 
-#define LOGIMNB 9       // 2* 256 -entry
+#define LOGIMNB 9       // 2 * 256-entry
 #define IMNB 2
 
 int IMm[IMNB] = { 10, 4 };
@@ -78,7 +78,7 @@ int8_t *GGEHL[GNB];
 
 //variation on global branch history
 #define PNB 3
-#define LOGPNB 9        // 1 1K + 2 * 512-entry tables
+#define LOGPNB 9        // 1 512 + 2 * 256-entry tables
 int Pm[PNB] = { 25, 16, 9 };
 int8_t PGEHLA[PNB][(1 << LOGPNB)] = { {0} };
 
@@ -95,7 +95,7 @@ int8_t *LGEHL[LNB];
 #define NLOCAL (1<<LOGLOCAL)
 
 // second local history
-#define LOGSNB 9        // 1 1K + 2 * 512-entry tables
+#define LOGSNB 9        // 1 512 + 2 * 256-entry tables
 #define SNB 3
 int Sm[SNB] = { 16, 11, 6 };
 int8_t SGEHLA[SNB][(1 << LOGSNB)] = { {0} };

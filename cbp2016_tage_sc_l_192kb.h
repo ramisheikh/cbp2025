@@ -51,14 +51,14 @@ int8_t BiasBank[(1 << LOGBIAS)];
 
 // IMLI-SIC -> Micro 2015  paper: a big disappointment on  CBP2016 traces
 #ifdef IMLI
-#define LOGINB 10        // 128-entry
+#define LOGINB 10        // 512-entry
 #define INB 1
 int Im[INB] = { 8 };
 int8_t IGEHLA[INB][(1 << LOGINB)] = { {0} };
 
 int8_t *IGEHL[INB];
 
-#define LOGIMNB 11       // 2* 256 -entry
+#define LOGIMNB 11       // 2 * 1K-entry
 #define IMNB 2
 
 int IMm[IMNB] = { 10, 4 };
@@ -69,7 +69,7 @@ int8_t *IMGEHL[IMNB];
 #endif
 
 //global branch GEHL
-#define LOGGNB 12       // 1 1K + 2 * 512-entry tables
+#define LOGGNB 12       // 1 4K + 2 * 2K-entry tables
 #define GNB 3
 int Gm[GNB] = { 40, 24, 10 };
 int8_t GGEHLA[GNB][(1 << LOGGNB)] = { {0} };
@@ -78,14 +78,14 @@ int8_t *GGEHL[GNB];
 
 //variation on global branch history
 #define PNB 3
-#define LOGPNB 11        // 1 1K + 2 * 512-entry tables
+#define LOGPNB 11        // 1 2K + 2 * 1K-entry tables
 int Pm[PNB] = { 25, 16, 9 };
 int8_t PGEHLA[PNB][(1 << LOGPNB)] = { {0} };
 
 int8_t *PGEHL[PNB];
 
 //first local history
-#define LOGLNB  11      // 1 1K + 2 * 512-entry tables
+#define LOGLNB  11      // 1 2K + 2 * 1K-entry tables
 #define LNB 3
 int Lm[LNB] = { 11, 6, 3 };
 int8_t LGEHLA[LNB][(1 << LOGLNB)] = { {0} };
@@ -105,7 +105,7 @@ int8_t *SGEHL[SNB];
 #define NSECLOCAL (1<<LOGSECLOCAL)  //Number of second local histories
 
 //third local history
-#define LOGTNB 11       // 2 * 512-entry tables
+#define LOGTNB 11       // 2 * 1K-entry tables
 #define TNB 2
 int Tm[TNB] = { 9, 4 };
 int8_t TGEHLA[TNB][(1 << LOGTNB)] = { {0} };
